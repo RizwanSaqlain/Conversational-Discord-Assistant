@@ -3,7 +3,6 @@ import aiosqlite
 import json
 from datetime import datetime
 
-
 def format_datetime(datetime_str):
     datetimeObject = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%fZ')
     formatted_datetime_str = datetimeObject.strftime('%Y-%m-%d %H:%M:%S')
@@ -22,119 +21,6 @@ async def init_db():
             )
         ''')
         await db.commit()
-
-
-async def init_classroom_db():
-    # Connect to the separate database file for Google Classroom data.
-    async with aiosqlite.connect('classroom.db') as db:
-        await db.execute('''
-            CREATE TABLE IF NOT EXISTS announcements (
-                courseId VARCHAR(20),
-                announcementId VARCHAR(20),
-                text TEXT,
-                materials JSON,
-                state VARCHAR(20),
-                alternateLink TEXT,
-                creationTime DATETIME,
-                updateTime DATETIME,
-                creatorUserId VARCHAR(30),
-                PRIMARY KEY (courseId, announcementId)
-            )
-        ''')
-        await db.commit()
-
-
-async def init_courseworks_db():
-    # Connect to the Google Classroom database file.
-    async with aiosqlite.connect('classroom.db') as db:
-        await db.execute('''
-            CREATE TABLE IF NOT EXISTS courseWorks (
-                courseId VARCHAR(20),
-                courseWorkId VARCHAR(20),
-                title TEXT,
-                state VARCHAR(20),
-                alternateLink TEXT,
-                creationTime DATETIME,
-                updateTime DATETIME,
-                maxPoints INTEGER,
-                workType TEXT,
-                submissionModificationMode TEXT,
-                creatorUserId VARCHAR(30),
-                PRIMARY KEY (courseId, courseWorkId)
-            )
-        ''')
-        await db.commit()
-
-
-async def init_courseworkmaterials_db():
-    # Connect to the Google Classroom database file.
-    async with aiosqlite.connect('classroom.db') as db:
-        await db.execute('''
-            CREATE TABLE IF NOT EXISTS courseWorkMaterials (
-                courseId VARCHAR(20),
-                courseWorkMaterialId VARCHAR(20),
-                title TEXT,
-                description TEXT,
-                materials JSON,
-                state VARCHAR(20),
-                alternateLink TEXT,
-                creationTime DATETIME,
-                updateTime DATETIME,
-                creatorUserId VARCHAR(30),
-                PRIMARY KEY (courseId, courseWorkMaterialId)
-            )
-        ''')
-        await db.commit()
-
-
-
-async def insert_data_announcement(announcement):
-    courseId = announcement['courseId']
-    announcementId = announcement['id']
-    text = announcement['text']
-    state = announcement['state']
-    alternateLink = announcement['alternateLink']
-    creationTime = format_datetime(announcement['creationTime'])
-    updateTime = format_datetime(announcement['updateTime'])
-    creatorUserId = announcement['creatorUserId']
-    materials = None
-
-    # If there are materials, process them (this example stores the last driveFile found)
-    try:
-        if 'materials' in announcement:
-            for material in announcement['materials']:
-                # This example assumes each material has a 'driveFile' key.
-                drive_file = material.get('driveFile')
-                if drive_file:
-                    materials = json.dumps(drive_file)
-    except KeyError:
-        pass
-
-    query = """
-        INSERT INTO announcements 
-        (courseId, announcementId, text, materials, state, alternateLink, creationTime, updateTime, creatorUserId)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """
-
-    async with aiosqlite.connect('classroom.db') as db:
-        await db.execute(query, (
-            courseId, 
-            announcementId, 
-            text, 
-            materials, 
-            state, 
-            alternateLink, 
-            creationTime, 
-            updateTime, 
-            creatorUserId
-        ))
-        await db.commit()
-
-# Example usage:
-# asyncio.run(insert_data_announcement(announcement_data))
-
-
-
 
 
 
@@ -174,6 +60,3 @@ async def clear_all_history_and_reset():
         await db.commit()
         
 asyncio.run(init_db())
-asyncio.run(init_classroom_db())
-asyncio.run(init_courseworks_db())
-asyncio.run(init_courseworkmaterials_db())

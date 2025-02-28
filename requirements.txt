@@ -1,0 +1,6 @@
+requests
+icecream
+asyncio
+aiosqlite
+discord
+groq
