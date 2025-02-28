@@ -4,9 +4,6 @@ from groq import Groq
 
 
 def _sync_query_llm(prompt: str) -> str:
-    """
-    Synchronous function that calls the Groq API using the provided prompt.
-    """
     client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
     chat_completion = client.chat.completions.create(
         messages=[
@@ -30,9 +27,6 @@ def _sync_query_llm(prompt: str) -> str:
     return chat_completion.choices[0].message.content
 
 async def query_llm(prompt: str) -> str:
-    """
-    Asynchronous wrapper around the synchronous Groq API call.
-    """
     loop = asyncio.get_running_loop()
     response = await loop.run_in_executor(None, _sync_query_llm, prompt)
     return response
