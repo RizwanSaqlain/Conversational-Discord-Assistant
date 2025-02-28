@@ -64,10 +64,7 @@ async def on_message(message):
             return
         discord_user_id = str(message.author.id)
         
-        # Save the user's message to the database
         await save_message(discord_user_id, "user", user_query)
-
-        # Retrieve the recent conversation history
         history = await get_recent_messages(discord_user_id, limit=30)
 
         # Build the conversation prompt from history
@@ -76,12 +73,14 @@ async def on_message(message):
             conversation_prompt += f"{role}: {msg}\n"
         conversation_prompt += "assistant: "
         print(conversation_prompt)
+        
         # Query the Groq API for a response
         response_text = await query_llm(conversation_prompt)
 
         # Save the assistant's response to the database
         await save_message(discord_user_id, "assistant", response_text)
         last_user_id = discord_user_id
+        
         # Check if the response exceeds Discord's 2000 character limit
         if len(response_text) > 2000:
             chunks = split_message(response_text)
